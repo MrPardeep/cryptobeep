@@ -1,0 +1,41 @@
+<div class="portfolio-detail">
+   <h1>portfolio-detail Component</h1>
+   <div class="loading" v-if='loader'>Loading&#8230;</div>
+      <div class="createadmin-container">
+         <div class="form-box">
+            <label class="headingForm">Admin</label>
+            <br>
+            <b-form @submit="addCoinCall">
+               <b-container fluid>
+                  <b-row class="my-1">
+                     <b-col sm="4"><label for="input-none">Market Name *</label></b-col>
+                     <b-col sm="8">
+                        <b-form-select name="Market Name" v-model="coinForm.name" v-validate="'required'" :options="marketNameList" class="mb-3">
+                        </b-form-select>
+                        <!-- <multiselect v-model="coinForm.name" name="Subject" :options="marketNameList" :multiple="true" v-validate="'required'" track-by="id">
+                        </multiselect> -->
+                        <span v-show="errors.has('Market Name')" class="help is-danger">{{ errors.first('Market Name') }}</span>
+                     </b-col>
+                  </b-row>
+                  <b-row class="my-1">
+                     <b-col sm="4"><label for="input-none">Price *</label></b-col>
+                     <b-col sm="8">
+                        <b-form-input id="name" name="Price" type="text" v-model="coinForm.currentValue" v-validate="'required'" placeholder="Enter Price"></b-form-input>
+                        <span v-show="errors.has('Price')" class="help is-danger">{{ errors.first('Price') }}</span>
+                     </b-col>
+                  </b-row>
+                  <b-row class="my-1">
+                     <b-col sm="4"><label for="input-none">Volume *</label></b-col>
+                     <b-col sm="8">
+                        <b-form-input id="name" name="Volume" type="text" v-model="coinForm.volume" v-validate="'required'" placeholder="Enter Volume"></b-form-input>
+                        <span v-show="errors.has('Volume')" class="help is-danger">{{ errors.first('Volume') }}</span>
+                     </b-col>
+                  </b-row>
+               </b-container>
+               <b-button type="submit" variant="primary">Submit</b-button>
+               <b-button type="reset" variant="secondary">Clear</b-button>
+            </b-form>
+         </div>
+      </div>
+   </section>
+</div>
