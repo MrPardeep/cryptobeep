@@ -14,7 +14,7 @@
         </span>
       </marquee>
     </div>
-    <img src="static/img/no-data-found.jpg" v-if='!myPortfolio.length' class='no-content-img'>
+    <img src="static/img/no-data-found.png" v-if='!myPortfolio.length && !portfolioFormToggle' class='no-content-img'>
     <br/>
 
     <!-- Add Portfolio section -->
@@ -23,8 +23,8 @@
       <b-form @submit="addPortfolio">
           <b-container fluid>
             <b-row class="my-1">
-                <b-col xs="4"><label for="input-none">Portfolio Name *</label></b-col>
-                <b-col xs="8">
+                <b-col cols="4"><label for="input-none">Portfolio Name *</label></b-col>
+                <b-col cols="8">
                   <b-form-input id="name" name="Portfolio" type="text" v-model="portfolioObj.name" v-validate="'required'" placeholder="Enter Portfolio Name"></b-form-input>
                   <span v-show="errors.has('Portfolio')" class="help is-danger">{{ errors.first('Portfolio') }}</span>
                 </b-col>
@@ -35,6 +35,7 @@
       </b-form>
     </div>
 
+    
     <div v-if='myPortfolio.length'>
       <label classs='main-heading'> Portfolio List</label>
       <b-card no-body>
@@ -42,32 +43,34 @@
           <b-tab :title="`${portfolio.name}`" v-for='portfolio in myPortfolio' :key="portfolio.name" @click.native='getCoinList(portfolio.name)'>
             <b-table v-if='portfolio.coins.length' striped hover :fields="fields" :items="portfolio.coins">
               <template slot="currentValue" scope="row">
-                {{row.currentValue ? row.currentValue.btc : '-'}} / {{row.currentValue ? row.currentValue.usd : '-'}}
+                {{row.item ? row.item.currentValue.btc : '-'}} / {{row.item.currentValue ? row.item.currentValue.usd : '-'}}
+              </template>
+              <template slot="alerts" scope="row">
+                {{row.item.btc ? row.item.btc.high : '-'}} / {{row.item.usd ? row.item.usd.low : '-'}}
               </template>
             </b-table>
           </b-tab>
         </b-tabs>
       </b-card>
 
-      <!-- Add coin section -->
-      <div class="form-box">
-        <b-form @submit="addCoinCall">
-            <b-container fluid>
-              <b-row class="my-1">
-                  <b-col xs="4"><label for="input-none">Market Name *</label></b-col>
-                  <b-col xs="8">
-                    <b-form-select name="Market Name" v-model="coinForm.name" v-validate="'required'" :options="marketNameList" class="mb-3">
-                    </b-form-select>
-                    <span v-show="errors.has('Market Name')" class="help is-danger">{{ errors.first('Market Name') }}</span>
-                  </b-col>
-              </b-row>
-            </b-container>
-            <br />
-            <b-button type="submit" variant="primary">Submit</b-button>
-            <!-- <b-button type="reset" variant="secondary">Clear</b-button> -->
-        </b-form>
-      </div>
-
+    <!-- Add coin section -->
+    <div class="form-box">
+      <b-form @submit="addCoinCall">
+          <b-container fluid>
+            <b-row class="my-1">
+                <b-col xs="4"><label for="input-none">Market Name *</label></b-col>
+                <b-col xs="8">
+                  <b-form-select name="Market Name" v-model="coinForm.name" v-validate="'required'" :options="marketNameList" class="mb-3">
+                  </b-form-select>
+                  <span v-show="errors.has('Market Name')" class="help is-danger">{{ errors.first('Market Name') }}</span>
+                </b-col>
+            </b-row>
+          </b-container>
+          <br />
+          <b-button type="submit" variant="primary">Submit</b-button>
+          <!-- <b-button type="reset" variant="secondary">Clear</b-button> -->
+      </b-form>
+    </div>
     </div>
   </div>
 </template>
@@ -188,7 +191,9 @@ export default {
     chrome.runtime.getBackgroundPage(bg => {
       this.backgroundRef = bg;
       this.myPortfolio = bg.portfolio;
+      this.marketNameList = [];
       this.marketNameList = bg.allMarkets;
+      this.marketNameList.unshift('Select Market');
       console.log(this.myPortfolio, "My portfolio from Background ref on Load");
     });
   }
@@ -197,6 +202,21 @@ export default {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
+::-webkit-scrollbar {
+    height: 8px;
+    width: 8px;
+    background: #c0c0c0;
+}
+
+::-webkit-scrollbar-thumb {
+    background: white;
+    -webkit-border-radius: 1ex;
+    -webkit-box-shadow: 0px 1px 2px rgba(0, 0, 0, 0.75);
+}
+
+::-webkit-scrollbar-corner {
+    background: white;
+}
 ul {
   list-style-type: none;
   padding: 0;
