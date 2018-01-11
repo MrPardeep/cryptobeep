@@ -37,7 +37,31 @@
 
     
     <div v-if='myPortfolio.length'>
-      <label classs='main-heading'> Portfolio List</label>
+      <div style='margin:0 0 20px'>
+        <label classs='main-heading pull-left'> Portfolio List</label>
+        <!-- <button class='btn btn-primary pull-right' @click='addMarketCall'>+ Add Market</button> -->
+        <b-btn class='pull-right' v-b-toggle.collapse1 variant="primary">+ Add Market</b-btn>
+        <b-collapse id="collapse1" class="mt-2">
+          <!-- Add coin section -->
+          <div class="form-box">
+            <b-form @submit="addCoinCall">
+                <b-container fluid>
+                  <b-row class="my-1">
+                      <!-- <b-col xs="4"><label for="input-none">Market Name *</label></b-col> -->
+                      <b-col xs="9">
+                        <b-form-select name="Market Name" v-model="coinForm.name" v-validate="'required'" :options="marketNameList" class="mb-3">
+                        </b-form-select>
+                        <span v-show="errors.has('Market Name')" class="help is-danger">{{ errors.first('Market Name') }}</span>
+                      </b-col>
+                      <b-col xs="3">
+                        <b-button type="submit" variant="primary">Submit</b-button>
+                      </b-col>
+                  </b-row>
+                </b-container>
+            </b-form>
+          </div>
+        </b-collapse>
+      </div>
       <b-card no-body>
         <b-tabs card v-model="tabIndex" no-fade=true>
           <b-tab :title="`${portfolio.name}`" v-for='portfolio in myPortfolio' :key="portfolio.name" @click.native='getCoinList(portfolio.name)'>
@@ -53,24 +77,6 @@
         </b-tabs>
       </b-card>
 
-    <!-- Add coin section -->
-    <div class="form-box">
-      <b-form @submit="addCoinCall">
-          <b-container fluid>
-            <b-row class="my-1">
-                <b-col xs="4"><label for="input-none">Market Name *</label></b-col>
-                <b-col xs="8">
-                  <b-form-select name="Market Name" v-model="coinForm.name" v-validate="'required'" :options="marketNameList" class="mb-3">
-                  </b-form-select>
-                  <span v-show="errors.has('Market Name')" class="help is-danger">{{ errors.first('Market Name') }}</span>
-                </b-col>
-            </b-row>
-          </b-container>
-          <br />
-          <b-button type="submit" variant="primary">Submit</b-button>
-          <!-- <b-button type="reset" variant="secondary">Clear</b-button> -->
-      </b-form>
-    </div>
     </div>
   </div>
 </template>
@@ -116,19 +122,58 @@ export default {
         alerts: {
           label: 'Alert Value',
           sortable: false
-        },
-        volume: {
-          label: 'Volume',
-          sortable: false
         }
       },
     }
   },
   methods: {
     addPortfolioToggle() {
-      this.portfolioFormToggle = true;
+      // this.portfolioFormToggle = true;
+      const {value: formValues} = this.$swal({
+        html:
+          '<input id="portfolio-name" class="swal2-input" v-model="portfolioObj.name" v-validate="required" placeholder="Enter Portfolio Name">',
+        focusConfirm: false,
+        confirmButtonText: 'Submit',
+        width: 400
+      }).then(result => {
+        let val = document.getElementById('portfolio-name').value;
+        console.log(this.portfolioObj, val);
+
+        /* As of now data binding is not working, commented code is right one */
+        /* if(this.portfolioObj.name) {
+          this.myPortfolio.push({name: this.portfolioObj.name, coins: []});
+          this.backgroundRef.updatePortfolioInDb();
+          this.portfolioObj = {};
+          // this.portfolioFormToggle = false;
+        } */
+        if(val) {
+          this.myPortfolio.push({name: val, coins: []});
+          this.backgroundRef.updatePortfolioInDb();
+        }
+      })
     },
 
+    addMarketCall() {
+      const {value: formValues} = this.$swal({
+        html:
+          '<b-form-select name="Market Name" v-model="coinForm.name" v-validate="required" :options="marketNameList" class="mb-3"></b-form-select>',
+          input: 'select',
+          inputOptions: {
+            'SRB': 'Serbia',
+            'UKR': 'Ukraine',
+            'HRV': 'Croatia'
+          },
+        focusConfirm: false,
+        confirmButtonText: 'Submit',
+        width: 400
+      }).then(result => {
+        // let val = document.getElementById('market-name').value;
+        this.addCoinCall();
+        if(val) {
+          this.coinForm.name = val;
+        }
+      })
+    },
     /* Method To add new portfolio into the list */
     addPortfolio(event) {
       event.preventDefault();
@@ -161,40 +206,39 @@ export default {
     addCoinCall(event) {
       event.preventDefault();
       console.log(this.coinForm, this.tabIndex);
-      // if(!this.containsObject(this.coinForm, this.myPortfolio)){
-        let coinData = {
-          name: this.coinForm.name,
-          showAlert: false,
-          volume: 0,
-          currentValue: {
-            btc: 0,
-            usd: 0
+      let coinData = {
+        name: this.coinForm.name,
+        showAlert: false,
+        volume: 0,
+        currentValue: {
+          btc: 0,
+          usd: 0
+        },
+        alerts: {
+          btc: {
+              high: 0,
+              low: 0
           },
-          alerts: {
-            btc: {
-                high: 0,
-                low: 0
-            },
-            usd: {
-                high: 0,
-                low: 0
-            }
+          usd: {
+              high: 0,
+              low: 0
           }
         }
+      }
 
-        this.myPortfolio[this.tabIndex].coins.push(coinData);
-        this.backgroundRef.updatePortfolioInDb();
-      // }
+      this.myPortfolio[this.tabIndex].coins.push(coinData);
+      this.backgroundRef.updatePortfolioInDb();
     }
   },
   created() {
     chrome.runtime.getBackgroundPage(bg => {
       this.backgroundRef = bg;
       this.myPortfolio = bg.portfolio;
+      this.bgMarketList = bg.allMarkets;
       this.marketNameList = [];
-      this.marketNameList = bg.allMarkets;
+      this.marketNameList = this.bgMarketList.slice();
       this.marketNameList.unshift('Select Market');
-      console.log(this.myPortfolio, "My portfolio from Background ref on Load");
+      // console.log(this.myPortfolio, "My portfolio from Background ref on Load");
     });
   }
 }
@@ -228,6 +272,12 @@ li {
 a {
   color: #42b983;
 }
+.pull-right {
+  float: right;
+}
+.pull-left {
+  float: left;
+}
 /* custom Styling */
 .no-content-img {
   margin: 10px
@@ -240,6 +290,7 @@ a {
 }
 .main-heading {
   font-size: 20px;
+  float: left;
 }
 .form-box {
   margin-top: 10px;
